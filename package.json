@@ -9,7 +9,7 @@
     "docker:down": "docker compose -f dev.docker-compose.yml down",
     "docker:build": "docker compose -f dev.docker-compose.yml build",
     "docker:start": "docker compose -f dev.docker-compose.yml start",
-    "docker:prod:up": "docker compose -f prod.docker-compose.yml up --build",
+    "docker:prod:up": "docker compose -f prod.docker-compose.yml --env-file ./.env.prod up --build",
     "docker:prod:down": "docker compose -f prod.docker-compose.yml down",
     "dev": "vite --host 0.0.0.0",
     "build": "tsc -b && vite build",

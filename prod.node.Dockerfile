@@ -5,6 +5,12 @@ RUN corepack enable
 COPY . /app
 WORKDIR /app
 
+ARG LOG_FILE
+ARG SERVER_NAME
+ARG GEO_COORDS
+ENV LOG_FILE=${LOG_FILE}
+ENV SERVER_NAME=${SERVER_NAME}
+ENV GEO_COORDS=${GEO_COORDS}
 
 FROM base AS prod-deps
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --prod --frozen-lockfile

@@ -36,10 +36,18 @@ RUN pnpm run build
 # CMD [ "pnpm", "start" ]
 # CMD ["node", "/app/dist/index.js"]
 
-FROM nginx:1.25.4-alpine3.18
+FROM nginx:alpine
+
+ARG WS_URL
 
 COPY ./nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /app/dist /var/www/html/
+
+RUN printenv
+
+RUN envsubst < /var/www/html/index.html > /var/www/html/index.html.new
+RUN mv /var/www/html/index.html /var/www/html/index.html.bkp
+RUN mv /var/www/html/index.html.new /var/www/html/index.html
 
 EXPOSE 3000
 

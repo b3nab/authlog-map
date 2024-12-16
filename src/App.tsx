@@ -21,7 +21,7 @@ interface LogInit {
 }
 
 function App() {
-  const WS_URL = "ws://127.0.0.1:3000/ws"
+  const WS_URL = (window as any).envConfig.WS_URL //|| "ws://127.0.0.1:3000/ws"
   const { sendMessage, lastJsonMessage, readyState } = useWebSocket<LogEvents | LogInit | undefined>(
     WS_URL,
     {
