@@ -23,7 +23,7 @@ services:
         - SERVER_NAME=$SERVER_NAME
         - GEO_COORDS=$GEO_COORDS
     ports:
-      - 42300:3000
+      - 3000
     # volumes:
     #   - ./:/app
     #   - /node_modules

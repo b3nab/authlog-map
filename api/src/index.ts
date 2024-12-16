@@ -3,6 +3,7 @@ import { Hono } from 'hono'
 import { createNodeWebSocket } from '@hono/node-ws'
 import { spawn } from 'node:child_process'
 import path from 'path'
+import { getConnInfo } from '@hono/node-server/conninfo'
 
 const app = new Hono()
 
@@ -13,10 +14,11 @@ const { injectWebSocket, upgradeWebSocket } = createNodeWebSocket({ app })
 //   return serverIP.ip
 // }
 
-// app.get('/', async (c) => {
-//   // return c.text('Hello Hono!')
-//   return c.text(`Hi! Your IP is ${getServerIP()}`)
-// })
+app.get('/', async (c) => {
+  // return c.text('Hello Hono!')
+  return c.text(`Hi! Your IP is ${getConnInfo(c).remote.address}`)
+  // return c.text(`Hi! Server IP is ${getServerIP()}`)
+})
 app.get('/ws', upgradeWebSocket((c) => {
   return {
     onOpen(event, ws) {
