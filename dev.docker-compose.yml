@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: ./dev.node.Dockerfile
-    command: pnpm dev --host 0.0.0.0
+    command: pnpm dev
     # env_file:
     #   - .env.local
     develop:

@@ -4,15 +4,17 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "docker:up": "docker compose -f dev.docker-compose.yml up --build",
     "docker:watch": "docker compose -f dev.docker-compose.yml --verbose watch",
+    "docker:up": "docker compose -f dev.docker-compose.yml up --build",
     "docker:down": "docker compose -f dev.docker-compose.yml down",
     "docker:build": "docker compose -f dev.docker-compose.yml build",
     "docker:start": "docker compose -f dev.docker-compose.yml start",
+    "docker:prod:up": "docker compose -f prod.docker-compose.yml up --build",
+    "docker:prod:down": "docker compose -f prod.docker-compose.yml down",
     "dev": "vite --host 0.0.0.0",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview --host 0.0.0.0"
   },
   "dependencies": {
     "react": "^19.0.0",
