@@ -1,0 +1,23 @@
+services:
+  dashboard:
+    build:
+      context: .
+      dockerfile: ./prod.dashboard.Dockerfile
+    # command: pnpm preview
+    ports:
+      - 3000
+    # volumes:
+    #   - ./:/app
+    #   - /node_modules
+    restart: unless-stopped
+
+  api:
+    build:
+      context: ./api
+      dockerfile: ../prod.node.Dockerfile
+    ports:
+      - 3000
+    # volumes:
+    #   - ./:/app
+    #   - /node_modules
+    restart: unless-stopped
