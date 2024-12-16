@@ -8,13 +8,21 @@ import countries from '../custom.geo.json'
 // import reactLogo from './assets/react.svg'
 // import viteLogo from '/vite.svg'
 
-type LogEvents = {
+interface LogEvents {
   events: any[]
-} | undefined
+}
+
+interface LogInit {
+  serverName: string
+  serverInfo: {
+    lat: number
+    lng: number
+  }
+}
 
 function App() {
   const WS_URL = "ws://127.0.0.1:3000/ws"
-  const { sendMessage, lastJsonMessage, readyState } = useWebSocket(
+  const { sendMessage, lastJsonMessage, readyState } = useWebSocket<LogEvents | LogInit | undefined>(
     WS_URL,
     {
       share: false,
@@ -36,13 +44,11 @@ function App() {
   };
   // const [ globeMat, setGlobeMat ] = useState<THREE.MeshPhongMaterial | undefined>()
   const [ ipData, setIpData ] = useState<any[]>([])
-  const [ serverRing, setServerRing ] = useState([{
-      lat: 49.4609,
-      lng: 11.0618,
-      text: "TITAN SERVER",
-      color: "rgb(10,90,200)",
-      // size: 0.7
-    }])
+  const [ serverRing, setServerRing ] = useState<{
+      lat: number
+      lng: number
+      text: string
+    } | undefined>()
   // const connectionStatus = {
   //   [ReadyState.CONNECTING]: 'Connecting',
   //   [ReadyState.OPEN]: 'Open',
@@ -52,16 +58,26 @@ function App() {
   // }[readyState];
 
   // Run when the connection state (readyState) changes
-  // useEffect(() => {
-  //   console.log("Connection state changed")
-  //   if (readyState === ReadyState.OPEN) {
-  //     sendMessage("hello from dashboard")
-  //   }
-  // }, [readyState])
+  useEffect(() => {
+    console.log("Connection state changed")
+    if (readyState === ReadyState.OPEN) {
+      sendMessage("init")
+    }
+  }, [readyState])
 
   // Run when a new WebSocket message is received (lastJsonMessage)
   useEffect(() => {
-    const messageEvents: LogEvents = lastJsonMessage as unknown as LogEvents
+    if (lastJsonMessage && (lastJsonMessage.hasOwnProperty('serverName'))) {
+      const { serverInfo, serverName } = lastJsonMessage as LogInit
+      setServerRing({
+        lat:  serverInfo.lat,
+        lng:  serverInfo.lng,
+        text:  serverName,
+      })
+    }
+
+
+    const messageEvents: LogEvents = lastJsonMessage as LogEvents
     // console.log(`Got a new message: ${JSON.stringify(messageEvents)}`)
     // console.log('Got a new message json: ', messageEvents)
     const getGeos = async () => {
@@ -92,6 +108,7 @@ function App() {
       console.log('newIpData == ', newIpData)
       // console.log('new Set(ips) == ', new Set(ips))
     }
+
     getGeos()
   }, [lastJsonMessage])
 
@@ -175,13 +192,17 @@ function App() {
         labelSize={1}
         labelDotRadius={(d: any) => d.size}
 
+        // ringsData={[{
+        //   lat: 49.4609,
+        //   lng: 11.0618,
+        //   text: "TITAN-SERVER",
+        //   color: "rgb(10, 200, 67)",
+        //   size: 3,
+        //   speed: 10
+        // }]}
         ringsData={[{
-          lat: 49.4609,
-          lng: 11.0618,
-          text: "TITAN-SERVER",
+          ...serverRing,
           color: "rgb(10, 200, 67)",
-          size: 3,
-          speed: 10
         }]}
         ringLat={(d: any) => d.lat}
         ringLng={(d: any) => d.lng}
@@ -207,15 +228,15 @@ function App() {
         arcDashAnimateTime={() => Math.random() * 4000 + 500}
         arcStroke={0.5}
 
-        // arcsData={[{
-        //   startLat: 31.7762,
-        //   startLng: 118.842,
-        //   endLat: 49.4609,
-        //   endLng: 11.0618,
-        //   text: "TITAN-SERVER",
-        //   color: "rgb(10,90,200)",
-        //   size: 2.7
-        // }]}
+        arcsData={[{
+          startLat: 31.7762,
+          startLng: 118.842,
+          endLat: 49.4609,
+          endLng: 11.0618,
+          text: "TITAN-SERVER",
+          color: ['#ffff00', '#ff0000'],
+          size: 2.7
+        }]}
         // arcColor={'color'}
         // arcDashLength={() => Math.random()}
         // arcDashGap={() => Math.random()}

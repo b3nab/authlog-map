@@ -1,23 +1,22 @@
 import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
 import { createNodeWebSocket } from '@hono/node-ws'
-import { getConnInfo } from '@hono/node-server/conninfo'
-import { spawn, spawnSync } from 'node:child_process'
+import { spawn } from 'node:child_process'
 import path from 'path'
 
 const app = new Hono()
 
 const { injectWebSocket, upgradeWebSocket } = createNodeWebSocket({ app })
 
-const getServerIP = async () => {
-  const serverIP = await (await fetch(`https://api.my-ip.io/v2/ip.json`)).json()
-  return serverIP.ip
-}
+// const getServerIP = async () => {
+//   const serverIP = await (await fetch(`https://api.my-ip.io/v2/ip.json`)).json()
+//   return serverIP.ip
+// }
 
-app.get('/', async (c) => {
-  // return c.text('Hello Hono!')
-  return c.text(`Hi! Your IP is ${getServerIP()}`)
-})
+// app.get('/', async (c) => {
+//   // return c.text('Hello Hono!')
+//   return c.text(`Hi! Your IP is ${getServerIP()}`)
+// })
 app.get('/ws', upgradeWebSocket((c) => {
   return {
     onOpen(event, ws) {
@@ -39,7 +38,20 @@ app.get('/ws', upgradeWebSocket((c) => {
     },
     onMessage(event, ws) {
       console.log(`Message from dashboard: ${event.data}`)
-      ws.send('Hello from api!')
+      if (event.data !== 'init') {
+        ws.send('Bye.')
+        return
+      }
+      // ws.send('Hello from api!')
+      const serverName = process.env.SERVER_NAME || 'Auth Log Map'
+      const serverInfo = {
+        lat: process.env.GEO_COORDS!.split('//')[0],
+        lng: process.env.GEO_COORDS!.split('//')[1],
+      }
+      ws.send(JSON.stringify({
+        serverName,
+        serverInfo
+      }))
     },
     onClose: () => {
       console.log('Connection closed')
