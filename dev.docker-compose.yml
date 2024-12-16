@@ -1,0 +1,45 @@
+services:
+  dashboard:
+    build:
+      context: .
+      dockerfile: ./dev.node.Dockerfile
+    command: pnpm dev --host 0.0.0.0
+    # env_file:
+    #   - .env.local
+    develop:
+      watch:
+        - action: sync
+          path: ./
+          target: /app
+          ignore:
+            - node_modules/
+        - action: rebuild
+          path: package.json
+    ports:
+      - 5173:5173
+    # volumes:
+    #   - ./:/app
+    #   - /node_modules
+    # restart: unless-stopped
+
+  api:
+    build:
+      context: ./api
+      dockerfile: ../dev.node.Dockerfile
+    env_file:
+      - ./api/.env.local
+    develop:
+      watch:
+        - action: rebuild
+          path: ./api
+          target: /app
+          ignore:
+            - node_modules/
+        - action: rebuild
+          path: package.json
+    ports:
+      - 3000:3000
+    # volumes:
+    #   - ./:/app
+    #   - /node_modules
+    # restart: unless-stopped
