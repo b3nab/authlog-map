@@ -8,7 +8,7 @@ services:
     # command: pnpm preview
     # command: envsubst > /var/www/html/index.html && nginx -g daemon off
     ports:
-      - 3000
+      - 80
     # volumes:
     #   - ./:/app
     #   - /node_modules
