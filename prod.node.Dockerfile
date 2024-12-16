@@ -37,7 +37,7 @@ COPY --from=build /app/dist /app/dist
 # # COPY --from=builder --chown=dashboard:nodejs /app/package.json /app/package.json
 
 # USER dashboard
-EXPOSE 8000
+EXPOSE 3000
 
 # CMD [ "pnpm", "start" ]
 CMD ["node", "/app/dist/index.js"]
