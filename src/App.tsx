@@ -71,6 +71,7 @@ function App() {
         lng:  serverInfo.lng,
         text:  serverName,
       })
+      return
     }
 
 
@@ -114,15 +115,8 @@ function App() {
   globeMat.emissive = new THREE.Color(0x220038)
   globeMat.emissiveIntensity = 0.1
   globeMat.shininess = 0.7
-
-  const N = 20;
-  const arcsData = [...Array(N).keys()].map(() => ({
-    startLat: (Math.random() - 0.5) * 180,
-    startLng: (Math.random() - 0.5) * 360,
-    endLat: (Math.random() - 0.5) * 180,
-    endLng: (Math.random() - 0.5) * 360,
-    color: [['red', 'white', 'blue', 'green'][Math.round(Math.random() * 3)], ['red', 'white', 'blue', 'green'][Math.round(Math.random() * 3)]]
-  }));
+  globeMat.opacity = 0.95
+  globeMat.transparent = true
 
   const myData = [
     {
@@ -157,7 +151,7 @@ function App() {
         ref={globeRef}
         onGlobeReady={globeReady}
 
-        // backgroundColor='#08070e'
+        backgroundColor='#08070e'
         rendererConfig={{ antialias: true, alpha: true }}
         // globeMaterial={
         //   new THREE.MeshPhongMaterial({
