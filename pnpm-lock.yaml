@@ -42,6 +42,9 @@ importers:
       '@vitejs/plugin-react':
         specifier: ^4.3.4
         version: 4.3.4(vite@6.0.3)
+      core-js:
+        specifier: ^3.39.0
+        version: 3.39.0
       eslint:
         specifier: ^9.17.0
         version: 9.17.0
@@ -54,6 +57,9 @@ importers:
       globals:
         specifier: ^15.13.0
         version: 15.13.0
+      regenerator-runtime:
+        specifier: ^0.14.1
+        version: 0.14.1
       typescript:
         specifier: ~5.7.2
         version: 5.7.2
@@ -650,6 +656,9 @@ packages:
 
   convert-source-map@2.0.0:
     resolution: {integrity: sha512-Kvp459HrV2FEJ1CAsi1Ku+MY3kasH19TFykTz2xWmMeq6bk2NU3XXvfJ+Q61m0xktWwt+1HSYf3JZsTms3aRJg==}
+
+  core-js@3.39.0:
+    resolution: {integrity: sha512-raM0ew0/jJUqkJ0E6e8UDtl+y/7ktFivgWvqw8dNSQeNWoSDLvQ1H/RN3aPXB9tBd4/FhyR4RDPGhsNIMsAn7g==}
 
   cross-spawn@7.0.6:
     resolution: {integrity: sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA==}
@@ -1840,6 +1849,8 @@ snapshots:
   concat-map@0.0.1: {}
 
   convert-source-map@2.0.0: {}
+
+  core-js@3.39.0: {}
 
   cross-spawn@7.0.6:
     dependencies:
