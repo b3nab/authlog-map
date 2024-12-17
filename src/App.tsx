@@ -82,9 +82,9 @@ function App() {
       if (!messageEvents) return
       // const promises = messageEvents?.events?.map((ev: any) => {
 
-      const promises = [...(new Map(messageEvents?.events?.map(ip => [ip.query, ip])))?.values()].map((ev: any) => {
+      const promises = [...(new Map(messageEvents?.events?.map(ip => [ip.context.ip_address, ip])))?.values()].map((ev: any) => {
         // const jsonRes = await res.json()
-        return fetch(`http://ip-api.com/json/${ev.context.ip_address}?fields=66846719`).then((res) => res.json())
+        return fetch(`https://ipwho.is/${ev.context.ip_address}`).then((res) => res.json())
       }) || []
       const ips = await Promise.all(promises)
       // const newIpData = ips ? Array.from((new Map(ips.map(ip => [ip.query, ip])))).map((res: any) => ({
@@ -94,11 +94,21 @@ function App() {
       //   })) : []
       // const newIpData = [...(new Map(ips?.map(ip => [ip.query, ip])))?.values()].map((res: any) => ({
       const newIpData = ips?.map((res: any) => ({
-          lat: res.lat,
-          lng: res.lon,
-          text: `${res.query}-${res.asname}-${res.country}`,
+          startLat: res.latitude,
+          startLng: res.longitude,
+          endLat: serverRing?.lat,
+          endLng: serverRing?.lng,
+          lat: res.latitude,
+          lng: res.longitude,
+          text: `${res.continent_code}/${res.country_code} ${res.ip}`,
           color: 'rgba(255, 42, 0, 1)',
-          size: 1
+          size: 1,
+          arcColor: ['#ffff00', '#ff0000'],
+          arcStroke: 0.5,
+          arcAltitude: 0.5,
+          arcDashLength: 0.03,
+          arcDashGap: 0.03,
+          arcDashAnimateTime: 3000,
           // resolution: 2,
           // dotRadius: 0.1
         }))
@@ -198,19 +208,20 @@ function App() {
         // ringPropagationSpeed={2}
         // ringAltitude={0}
 
-        arcsData={[{
-          startLat: 31.7762,
-          startLng: 118.842,
-          endLat: 49.4609,
-          endLng: 11.0618,
-          text: "TITAN-SERVER",
-          arcColor: ['#ffff00', '#ff0000'],
-          arcStroke: 0.5,
-          arcAltitude: 0.3,
-          arcDashLength: 0.03,
-          arcDashGap: 0.03,
-          arcDashAnimateTime: 3000,
-        }]}
+        // arcsData={[{
+        //   startLat: 31.7762,
+        //   startLng: 118.842,
+        //   endLat: 49.4609,
+        //   endLng: 11.0618,
+        //   text: "TITAN-SERVER",
+        //   arcColor: ['#ffff00', '#ff0000'],
+        //   arcStroke: 0.5,
+        //   arcAltitude: 0.3,
+        //   arcDashLength: 0.03,
+        //   arcDashGap: 0.03,
+        //   arcDashAnimateTime: 3000,
+        // }]}
+        arcsData={ipData}
         arcColor={'arcColor'}
         arcStroke={'arcStroke'}
         arcAltitude={'arcAltitude'}
