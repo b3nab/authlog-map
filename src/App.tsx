@@ -112,7 +112,7 @@ function App() {
           // resolution: 2,
           // dotRadius: 0.1
         }))
-      setIpData(newIpData ?? [])
+      setIpData([...ipData, ...newIpData])
       console.log('newIpData == ', newIpData)
       // console.log('new Set(ips) == ', new Set(ips))
     }
