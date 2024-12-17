@@ -1,12 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import Globe, { GlobeMethods } from 'react-globe.gl'
-import './App.css'
 import useWebSocket, { ReadyState } from 'react-use-websocket'
 import * as THREE from 'three'
 
 import countries from '../custom.geo.json'
-// import reactLogo from './assets/react.svg'
-// import viteLogo from '/vite.svg'
 
 interface LogEvents {
   events: any[]
@@ -156,17 +153,11 @@ function App() {
 
 
   return (
-    <div style={{
-      width: "100vw",
-      height: "100vh",
-    }}>
       <Globe
         ref={globeRef}
-        // waitForGlobeReady={true}
-        // animateIn={true}
         onGlobeReady={globeReady}
 
-        backgroundColor='#08070e'
+        // backgroundColor='#08070e'
         rendererConfig={{ antialias: true, alpha: true }}
         // globeMaterial={
         //   new THREE.MeshPhongMaterial({
@@ -213,39 +204,27 @@ function App() {
         // ringPropagationSpeed={2}
         // ringAltitude={0}
 
-        // arcsData={myData}
-        // arcColor='color'
-        // arcStroke='stroke'
-        // arcDashGap='gap'
-        // arcDashLength='dash'
-        // arcAltitudeAutoScale='scale'
-        // arcDashAnimateTime='time'
-
-        // arcsData={arcsData}
-        arcColor={'color'}
-        arcDashLength={() => Math.random()}
-        arcDashGap={() => Math.random()}
-        arcDashAnimateTime={() => Math.random() * 4000 + 500}
-        arcStroke={0.5}
-
         arcsData={[{
           startLat: 31.7762,
           startLng: 118.842,
           endLat: 49.4609,
           endLng: 11.0618,
           text: "TITAN-SERVER",
-          color: ['#ffff00', '#ff0000'],
-          size: 2.7
+          arcColor: ['#ffff00', '#ff0000'],
+          arcStroke: 0.5,
+          arcAltitude: 0.3,
+          arcDashLength: 0.03,
+          arcDashGap: 0.03,
+          arcDashAnimateTime: 3000,
         }]}
-        // arcColor={'color'}
-        // arcDashLength={() => Math.random()}
-        // arcDashGap={() => Math.random()}
-        // arcDashAnimateTime={1000 + 500}
-        // arcsTransitionDuration={5000}
-        // arcStroke={(e) => { return e["altArc"]}}
-        // ringDotRadius={(d: any) => d.size}
+        arcColor={'arcColor'}
+        arcStroke={'arcStroke'}
+        arcAltitude={'arcAltitude'}
+        arcDashLength={'arcDashLength'}
+        arcDashGap={'arcDashGap'}
+        arcDashAnimateTime={'arcDashAnimateTime'}
+        arcsTransitionDuration={5000}
       />
-    </div>
   )
 }
 
