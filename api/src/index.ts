@@ -4,6 +4,15 @@ import { createNodeWebSocket } from '@hono/node-ws'
 import { spawn } from 'node:child_process'
 import path from 'path'
 import { getConnInfo } from '@hono/node-server/conninfo'
+import { getIP, getIPs, updateOrCreateIP, type IPModel } from './db/ips.js'
+import { getHit, updateOrCreateHit } from './db/hits.js'
+import type { SendOptions } from 'hono/ws'
+
+// test db - sync up changes with docker compose in development
+// updateOrCreateHit("123.123.123.123", {
+//   ip: "123.123.123.123",
+//   count: 19
+// })
 
 const app = new Hono()
 
@@ -26,19 +35,20 @@ app.get('/ws', upgradeWebSocket((c) => {
       // ws.send("data coming!")
 
       // const fileLog = "/var/log/auth.log"
-      const fileLog = process.env.LOG_FILE! || "./auth-log"
+      const fileLog = process.env.LOG_FILE! || "/var/log/auth.log"
       console.log(`Listening on file: ${path.resolve(fileLog)}`)
       // const tail = spawn(`tail -f ${fileLog}`)
-      const tail = spawn('tail', ['-f', fileLog])
-      tail.stdout.on("data", (data) => {
-        console.log(`Sending data to dashboard: ${data}`)
+      const tail = spawn('tail', ['-n 100', '-f', fileLog])
+      tail.stdout.on("data", async (data) => {
+        // console.log(`Sending data to dashboard: ${data}`)
         // ws.send('DATAAAAAAAAA')
-        const stringified = analyzeLogs((Buffer.from(data)).toString().split('\n'))
+        const logLines = (Buffer.from(data)).toString().split('\n')
+        const stringified = await analyzeLogs(logLines, ws.send)
         console.log('Stringified data: ', stringified)
         ws.send(stringified)
       })
     },
-    onMessage(event, ws) {
+    async onMessage(event, ws) {
       console.log(`Message from dashboard: ${event.data}`)
       if (event.data !== 'init') {
         ws.send('Bye.')
@@ -50,9 +60,11 @@ app.get('/ws', upgradeWebSocket((c) => {
         lat: process.env.GEO_COORDS!.split('//')[0],
         lng: process.env.GEO_COORDS!.split('//')[1],
       }
+      const ips = await getIPs()
       ws.send(JSON.stringify({
         serverName,
-        serverInfo
+        serverInfo,
+        ips
       }))
     },
     onClose: () => {
@@ -61,7 +73,7 @@ app.get('/ws', upgradeWebSocket((c) => {
   }
 }))
 
-function analyzeLogs(logs: string[]) {
+async function analyzeLogs(logs: string[], send: { (source: string | ArrayBuffer | Uint8Array, options?: SendOptions): void; (arg0: string): void }) {
   const logsResult: {
     events: any[]
   } = {
@@ -69,15 +81,104 @@ function analyzeLogs(logs: string[]) {
   }
   for (const log of logs) {
     const { eventName, context } = parseLog(log)
-    console.log('INFO: ', eventName, context)
-    if (Object.hasOwn(context ?? {}, 'ip_address')) {
-      logsResult.events.push({
-        eventName,
-        context
-      })
+    // console.log('INFO: ', eventName, context)
+    if (context && Object.hasOwn(context ?? {}, 'ip_address')) {
+      try {
+        const ipInfos = await prepareAndStoreInfos(context.ip_address)
+        logsResult.events.push({
+          eventName,
+          context,
+          ipInfos
+        })
+        send(JSON.stringify(logsResult))
+      } catch (error) {
+        console.log('Error, skipping ip: ', context.ip_address)
+      }
     }
   }
   return JSON.stringify(logsResult)
+}
+
+async function prepareAndStoreInfos(ip: string) {
+  const ipDb = await getIP(ip)
+  const hitDb = await getHit(ip)
+  const hitSaved = await updateOrCreateHit(ip, {
+    ip,
+    count: hitDb?.count ? hitDb.count + 1 : 1
+  })
+  if (ipDb) {
+    return {
+      ip: ipDb,
+      hit: hitSaved
+    }
+  }
+
+  let ipRemote
+
+  try {
+    ipRemote = await getRemoteIPInfoFromGETGEOAPICOM(ip)
+  } catch (errorGETGEOAPICOM) {
+    console.log('error on GETGEOAPICOM: ', errorGETGEOAPICOM)
+    try {
+      ipRemote = await getRemoteIPInfoFromIPWHOIS(ip)
+    } catch (errorIPWHOIS) {
+      console.log('error on IPWHOIS: ', errorIPWHOIS)
+      try {
+        ipRemote = await getRemoteIPInfoFromIPAPICO(ip)
+      } catch (errorIPAPICO) {
+        console.log('error on IPAPICO: ', errorIPAPICO)
+      }
+    }
+  }
+
+  if(!ipRemote) throw new Error('Could not retrieve IP infos from apis.')
+
+  const ipSaved = await updateOrCreateIP(ip, ipRemote)
+
+  return {
+    ip: ipSaved,
+    hit: hitSaved
+  }
+}
+
+async function getRemoteIPInfoFromGETGEOAPICOM(ip: string): Promise<IPModel> {
+  const ipRes = await (await fetch(`https://api.getgeoapi.com/v2/ip/${ip}?api_key=${process.env.GEO_API_KEY}&format=json`)).json()
+  if (ipRes.status !== 'success') throw new Error(ipRes.error.message)
+  return {
+    ip,
+    continent_code: ipRes.continent?.code,
+    country_code: ipRes.country?.code,
+    city: ipRes.city?.name,
+    lat: ipRes.location?.latitude,
+    lng: ipRes.location?.longitude,
+    isp: ipRes.asn?.organisation,
+  }
+}
+async function getRemoteIPInfoFromIPAPICO(ip: string): Promise<IPModel> {
+  const ipRes = await (await fetch(`https://ipapi.co/${ip}/json`)).json()
+  if (!ipRes.success) throw new Error(ipRes.message)
+  return {
+    ip,
+    continent_code: ipRes.continent_code,
+    country_code: ipRes.country_code,
+    city: ipRes.city,
+    lat: ipRes.latitude,
+    lng: ipRes.longitude,
+    isp: ipRes.org,
+  }
+}
+async function getRemoteIPInfoFromIPWHOIS(ip: string): Promise<IPModel> {
+  const ipRes = await (await fetch(`https://ipwho.is/${ip}`)).json()
+  if (!ipRes.success) throw new Error(ipRes.message)
+  return {
+    ip,
+    continent_code: ipRes.continent_code,
+    country_code: ipRes.country_code,
+    city: ipRes.city,
+    lat: ipRes.latitude,
+    lng: ipRes.longitude,
+    isp: ipRes.connection.isp,
+  }
 }
 
 function parseLog(log: string) {

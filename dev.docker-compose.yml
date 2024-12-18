@@ -39,7 +39,7 @@ services:
           path: package.json
     ports:
       - 3000:3000
-    # volumes:
-    #   - ./:/app
-    #   - /node_modules
+    volumes:
+      # - ./api/auth.log:/app/auth.log
+      - ./api/storage/:/app/storage/
     # restart: unless-stopped

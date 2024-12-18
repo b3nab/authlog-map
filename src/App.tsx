@@ -6,7 +6,25 @@ import * as THREE from 'three'
 import countries from '../custom.geo.json'
 
 interface LogEvents {
-  events: any[]
+  events: {
+    eventName: string
+    context: any
+    ipInfos:  {
+      ip: {
+        ip: string
+        continent_code: string
+        country_code: string
+        city: string
+        lat: string | number
+        lng: string | number
+        isp: string
+      }
+      hit: Record<string, {
+        ip: string
+        count: number
+      }>;
+    }
+  }[]
 }
 
 interface LogInit {
@@ -40,11 +58,12 @@ function App() {
     }
   };
   // const [ globeMat, setGlobeMat ] = useState<THREE.MeshPhongMaterial | undefined>()
-  const [ ipData, setIpData ] = useState<any[]>([])
+  const [ ipData, setIpData ] = useState<any[]>()
   const [ serverRing, setServerRing ] = useState<{
       lat: number
       lng: number
       text: string
+      color: string
     } | undefined>()
   // const connectionStatus = {
   //   [ReadyState.CONNECTING]: 'Connecting',
@@ -70,6 +89,7 @@ function App() {
         lat:  serverInfo.lat,
         lng:  serverInfo.lng,
         text:  serverName,
+        color: "rgb(10, 200, 67)",
       })
       return
     }
@@ -82,25 +102,26 @@ function App() {
       if (!messageEvents) return
       // const promises = messageEvents?.events?.map((ev: any) => {
 
-      const promises = [...(new Map(messageEvents?.events?.map(ip => [ip.context.ip_address, ip])))?.values()].map((ev: any) => {
-        // const jsonRes = await res.json()
-        return fetch(`https://ipwho.is/${ev.context.ip_address}`).then((res) => res.json())
-      }) || []
-      const ips = await Promise.all(promises)
+      const eventsToIPs = [...(new Map(messageEvents?.events?.map(ip => [ip.context.ip_address, ip])))?.values()]
+
+      // const promises = eventsToIPs.map((ev: any) => {
+      //   return fetch(`https://ipwho.is/${ev.context.ip_address}`).then((res) => res.json())
+      // }) || []
+      // const ips = await Promise.all(promises)
       // const newIpData = ips ? Array.from((new Map(ips.map(ip => [ip.query, ip])))).map((res: any) => ({
       //     lat: res.lat,
       //     lng: res.lon,
       //     text: `${res.query}-${res.asname}-${res.country}`
       //   })) : []
       // const newIpData = [...(new Map(ips?.map(ip => [ip.query, ip])))?.values()].map((res: any) => ({
-      const newIpData = ips?.map((res: any) => ({
-          startLat: res.latitude,
-          startLng: res.longitude,
+      const newIpData = eventsToIPs?.map((data) => ({
+          startLat: data.ipInfos.ip.lat,
+          startLng: data.ipInfos.ip.lng,
           endLat: serverRing?.lat,
           endLng: serverRing?.lng,
-          lat: res.latitude,
-          lng: res.longitude,
-          text: `${res.continent_code}/${res.country_code} ${res.ip}`,
+          lat: data.ipInfos.ip.lat,
+          lng: data.ipInfos.ip.lng,
+          text: `${data.ipInfos.ip.continent_code}/${data.ipInfos.ip.country_code} ${data.ipInfos.ip.ip}`,
           color: 'rgba(255, 42, 0, 1)',
           size: 1,
           arcColor: ['#ffff00', '#ff0000'],
@@ -112,7 +133,26 @@ function App() {
           // resolution: 2,
           // dotRadius: 0.1
         }))
-      setIpData([...ipData, ...newIpData])
+      // const newIpData = ips?.map((res: any) => ({
+      //     startLat: res.latitude,
+      //     startLng: res.longitude,
+      //     endLat: serverRing?.lat,
+      //     endLng: serverRing?.lng,
+      //     lat: res.latitude,
+      //     lng: res.longitude,
+      //     text: `${res.continent_code}/${res.country_code} ${res.ip}`,
+      //     color: 'rgba(255, 42, 0, 1)',
+      //     size: 1,
+      //     arcColor: ['#ffff00', '#ff0000'],
+      //     arcStroke: 0.5,
+      //     arcAltitude: 0.6,
+      //     arcDashLength: 0.03,
+      //     arcDashGap: 0.03,
+      //     arcDashAnimateTime: 3000,
+      //     // resolution: 2,
+      //     // dotRadius: 0.1
+      //   }))
+        setIpData([...(ipData ?? []), ...newIpData])
       console.log('newIpData == ', newIpData)
       // console.log('new Set(ips) == ', new Set(ips))
     }
@@ -163,14 +203,14 @@ function App() {
 
         backgroundColor='#08070e'
         rendererConfig={{ antialias: true, alpha: true }}
-        // globeMaterial={
-        //   new THREE.MeshPhongMaterial({
-        //     color: '#1a2033',
-        //     opacity: 0.95,
-        //     transparent: true,
-        //   })
-        // }
-        globeMaterial={globeMat}
+        globeMaterial={
+          new THREE.MeshPhongMaterial({
+            color: '#1a2033',
+            opacity: 0.95,
+            transparent: true,
+          })
+        }
+        // globeMaterial={globeMat}
         hexPolygonsData={countries.features}
         hexPolygonResolution={3}
         hexPolygonMargin={0.7}
@@ -182,10 +222,14 @@ function App() {
         // pointAltitude="size"
         // pointColor="color"
 
-        labelsData={ipData}
-        labelColor={(d: any) => d.color}
-        labelSize={1}
-        labelDotRadius={(d: any) => d.size}
+        pointsData={ipData}
+        pointColor={'color'}
+        pointRadius={'size'}
+        pointAltitude={0.01}
+        // labelsData={ipData}
+        // labelColor={'color'}
+        // labelSize={1}
+        // labelDotRadius={'size'}
 
         // ringsData={[{
         //   lat: 49.4609,
@@ -195,13 +239,10 @@ function App() {
         //   size: 3,
         //   speed: 10
         // }]}
-        ringsData={[{
-          ...serverRing,
-          color: "rgb(10, 200, 67)",
-        }]}
+        ringsData={[{...serverRing}]}
         ringLat={(d: any) => d.lat}
         ringLng={(d: any) => d.lng}
-        ringColor={(d: any) => d.color}
+        ringColor={'color'}
         ringMaxRadius={4}
         ringRepeatPeriod={300}
         ringResolution={5}

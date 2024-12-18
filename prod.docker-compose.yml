@@ -17,8 +17,14 @@ services:
         - LOG_FILE=$LOG_FILE
         - SERVER_NAME=$SERVER_NAME
         - GEO_COORDS=$GEO_COORDS
+        - GEO_API_KEY=$GEO_API_KEY
+        - DBJSON=$DBJSON
     ports:
       - 3000
     volumes:
       - /var/log/auth.log:/app/auth.log
+      - dbjson:/app/db.json
     restart: unless-stopped
+
+volumes:
+  dbjson:
