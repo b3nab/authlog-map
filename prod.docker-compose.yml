@@ -23,8 +23,8 @@ services:
       - 3000
     volumes:
       - /var/log/auth.log:/app/auth.log
-      - dbjson:/app/db.json
+      - api-storage:/app/storage/
     restart: unless-stopped
 
 volumes:
-  dbjson:
+  api-storage:
