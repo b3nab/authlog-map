@@ -33,6 +33,15 @@ interface LogInit {
     lat: number
     lng: number
   }
+  ips: Record<string, {
+    ip: string
+    continent_code: string
+    country_code: string
+    city: string
+    lat: string | number
+    lng: string | number
+    isp: string
+  }>
 }
 
 function App() {
@@ -84,13 +93,32 @@ function App() {
   // Run when a new WebSocket message is received (lastJsonMessage)
   useEffect(() => {
     if (lastJsonMessage && (lastJsonMessage.hasOwnProperty('serverName'))) {
-      const { serverInfo, serverName } = lastJsonMessage as LogInit
+      const { serverInfo, serverName, ips } = lastJsonMessage as LogInit
       setServerRing({
         lat:  serverInfo.lat,
         lng:  serverInfo.lng,
         text:  serverName,
         color: "rgb(10, 200, 67)",
       })
+      setIpData([...(ipData ?? []), ...Object.values(ips).map((data) => ({
+          startLat: data.lat,
+          startLng: data.lng,
+          endLat: serverRing?.lat,
+          endLng: serverRing?.lng,
+          lat: data.lat,
+          lng: data.lng,
+          text: `${data.continent_code}/${data.country_code} ${data.ip}`,
+          color: 'rgba(255, 42, 0, 1)',
+          size: 1,
+          arcColor: ['#ffff00', '#ff0000'],
+          arcStroke: 0.5,
+          arcAltitude: 0.5,
+          arcDashLength: 0.03,
+          arcDashGap: 0.03,
+          arcDashAnimateTime: 3000,
+          // resolution: 2,
+          // dotRadius: 0.1
+        }))])
       return
     }
 
