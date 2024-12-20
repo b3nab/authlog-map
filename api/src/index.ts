@@ -91,13 +91,14 @@ async function analyzeLogs(
     events: [],
   }
   for (const log of logs) {
-    const { eventName, context } = parseLog(log)
-    // console.log('INFO: ', eventName, context)
+    const { eventName, eventSuccess, context } = parseLog(log)
+    // console.log('INFO: ', eventName, eventSuccess, context)
     if (context && Object.hasOwn(context ?? {}, 'ip_address')) {
       try {
         const ipInfos = await prepareAndStoreInfos(context.ip_address)
         logsResult.events.push({
           eventName,
+          eventSuccess,
           context,
           ipInfos,
           // endLocation: {
@@ -201,56 +202,65 @@ async function getRemoteIPInfoFromIPWHOIS(ip: string): Promise<IPModel> {
 }
 
 function parseLog(log: string) {
-  let eventName, context
+  let eventName, eventSuccess, context
   if (log.includes('Failed password')) {
+    eventSuccess = false
     eventName = 'failed password'
     context =
       /Failed password for (invalid user )?(?<username>\w+) from (?<ip_address>[\d.]+) port (?<port>\d+) (?<protocol>\w+)/.exec(
         log,
       )?.groups
   } else if (log.includes('Invalid user')) {
+    eventSuccess = false
     eventName = 'invalid user'
     context =
       /Invalid user (?<username>\w+) from (?<ip_address>[\d.]+) port (?<port>\d+)/.exec(
         log,
       )?.groups
   } else if (log.includes('Accepted')) {
+    eventSuccess = true
     eventName = 'successful login'
     context =
       /Accepted (?<auth_method>\w+) for (?<username>\w+) from (?<ip_address>[\d.]+) port (?<port>\d+) (?<protocol>\w+)(: )?(?<ssh_signature>RSA SHA256:[A-Za-z0-9+/=]+)?/.exec(
         log,
       )?.groups
   } else if (log.includes('Received disconnect')) {
+    eventSuccess = false
     eventName = 'disconnect user'
     context =
       /Received disconnect from (?<ip_address>[\d.]+)(?: port (?<port>\d+))?:(?<error_code>\d+):.*\[(?<stage>\w+)\]/.exec(
         log,
       )?.groups
   } else if (log.includes('Disconnected')) {
+    eventSuccess = false
     eventName = 'disconnect user'
     context =
       /Disconnected from (invalid |authenticating )?user (?<username>\w+) (?<ip_address>[\d.]+) port (?<port>\d+) \[(?<stage>\w+)\]/.exec(
         log,
       )?.groups
   } else if (log.includes('session opened for user')) {
+    eventSuccess = true
     eventName = 'session opened'
     context =
       /pam_unix\((?<service>\S+):(?<pam_activity>\S+)\): session opened for user (?<sudo_user>\S+)\(uid=(?<sudo_user_id>\d+)\) by (?<username>\S+)?\(uid=(?<user_id>\d+)\)/.exec(
         log,
       )?.groups
   } else if (log.includes('session closed for user')) {
+    eventSuccess = true
     eventName = 'session closed'
     context =
       /pam_unix\((?<service>\S+):(?<pam_activity>\S+)\): session closed for user (?<sudo_user>\S+)/.exec(
         log,
       )?.groups
   } else if (log.includes('TTY=')) {
+    eventSuccess = true
     eventName = 'sudo command'
     context =
       /(?<username>\S+) : ((?<error>.*?) ; )?TTY=(?<tty>\S+) ; PWD=(?<pwd>\S+) ; USER=(?<sudo_user>\S+) ;( COMMAND=(?<command>.+))?/.exec(
         log,
       )?.groups
   } else if (log.includes('authentication failure')) {
+    eventSuccess = false
     eventName = 'sudo authentication failure'
     context =
       /pam_unix\((?<service>\S+):(?<pam_activity>\S+)\): (?<error>.*?); ?logname=(?<logname>.*?) ?uid=(?<uid>\d+) ?euid=(?<euid>\d+) ?tty=(?<tty>\S+) ?ruser=(?<ruser>.*?) ?rhost=(?<rhost>.*?)( user=(?<user>\w+))?/.exec(
@@ -259,6 +269,7 @@ function parseLog(log: string) {
   }
   return {
     eventName,
+    eventSuccess,
     context,
   }
 }

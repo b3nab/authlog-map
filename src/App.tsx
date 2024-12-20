@@ -8,6 +8,7 @@ import countries from '../custom.geo.json'
 interface LogEvents {
   events: {
     eventName: string
+    eventSuccess: boolean
     context: any
     ipInfos: {
       ip: {
@@ -63,7 +64,6 @@ function App() {
     if (globeRef.current) {
       // globeRef.current.controls().autoRotate = true;
       // globeRef.current.controls().enableZoom = false;
-
       globeRef.current.pointOfView({
         lat: 49.4609,
         lng: 11.0618,
@@ -71,7 +71,6 @@ function App() {
       })
     }
   }
-  // const [ globeMat, setGlobeMat ] = useState<THREE.MeshPhongMaterial | undefined>()
   const [ipData, setIpData] = useState<Record<string, any[]>>()
   const [serverRing, setServerRing] = useState<
     | {
@@ -111,34 +110,6 @@ function App() {
         text: serverName,
         color: 'rgb(10, 200, 67)',
       })
-      setIpData({
-        ...(ipData ?? {}),
-        ...Object.values(ips).reduce(
-          (acc, data) => ({
-            ...acc,
-            [data.ip]: {
-              startLat: data.lat,
-              startLng: data.lng,
-              endLat: serverInfo.lat,
-              endLng: serverInfo.lng,
-              lat: data.lat,
-              lng: data.lng,
-              text: `${data.continent_code}/${data.country_code} ${data.ip}`,
-              color: 'rgba(255, 42, 0, 1)',
-              pointRadius: 0.3,
-              arcColor: ['#ffff00', '#ff0000'],
-              arcStroke: 0.5,
-              // arcAltitude: 0.5,
-              arcDashLength: 0.03,
-              arcDashGap: 0.03,
-              arcDashAnimateTime: 10000,
-              // resolution: 2,
-              // dotRadius: 0.1
-            },
-          }),
-          {},
-        ),
-      })
       return
     }
 
@@ -154,16 +125,6 @@ function App() {
       )?.values(),
     ]
 
-    // const promises = eventsToIPs.map((ev: any) => {
-    //   return fetch(`https://ipwho.is/${ev.context.ip_address}`).then((res) => res.json())
-    // }) || []
-    // const ips = await Promise.all(promises)
-    // const newIpData = ips ? Array.from((new Map(ips.map(ip => [ip.query, ip])))).map((res: any) => ({
-    //     lat: res.lat,
-    //     lng: res.lon,
-    //     text: `${res.query}-${res.asname}-${res.country}`
-    //   })) : []
-    // const newIpData = [...(new Map(ips?.map(ip => [ip.query, ip])))?.values()].map((res: any) => ({
     const newIpData = eventsToIPs?.reduce(
       (acc, data) => ({
         ...acc,
@@ -175,9 +136,9 @@ function App() {
           lat: data.ipInfos.ip.lat,
           lng: data.ipInfos.ip.lng,
           text: `${data.ipInfos.ip.continent_code}/${data.ipInfos.ip.country_code} ${data.ipInfos.ip.ip}`,
-          color: 'rgba(255, 42, 0, 1)',
-          pointRadius: 0.3,
-          arcColor: ['#ffff00', '#ff0000'],
+          color: data.eventSuccess ? 'rgb(0, 255, 69)' : 'rgba(255, 42, 0, 1)',
+          pointRadius: data.eventSuccess ? 0.5 : 0.3,
+          arcColor: data.eventSuccess ? '' : ['#ffff00', '#ff0000'],
           arcStroke: 0.5,
           // arcAltitude: 0.5,
           arcDashLength: 0.03,
