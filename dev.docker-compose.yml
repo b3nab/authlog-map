@@ -2,10 +2,10 @@ services:
   dashboard:
     build:
       context: .
-      dockerfile: ./dev.node.Dockerfile
+      dockerfile: ./dev.dashboard.Dockerfile
+      args:
+        - WS_URL=$WS_URL
     command: pnpm dev
-    # env_file:
-    #   - .env.local
     develop:
       watch:
         - action: sync
@@ -35,6 +35,7 @@ services:
           target: /app
           ignore:
             - node_modules/
+            - storage/
         - action: rebuild
           path: package.json
     ports:
